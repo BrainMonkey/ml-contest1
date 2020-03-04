@@ -10,13 +10,13 @@ Jupyter notebook allows you to run python and r code.
 
 To run jupyter notebook.
 
-* Prequsites for Windows machines: Need to have `make` an `docker` installed.
+* Prequsites for Windows machines: Need to have `make` an `docker` installed. It is recommended to use Chocolatey to install. [Chocolatey](https://chocolatey.org/docs/installation) [Chocolatey Make](https://chocolatey.org/packages/make)
 * Prequsites for Mac machines: Need to have `docker` installed.
 
 1. Open cmdpromt or terminal depending on your OS
 1. From the project directory run: `make build-jupyter`
 1. Run with: `make run-jupyter`
-1. Open a browser to 127.0.0.1:888/<token> . `<toke>` will come from the logs and follow format `/?token=a278745b42b35d1aa0dcb002d33cf8738df3b70b2d773e67` . Example:
+1. Open a browser to 127.0.0.1:888/<token> . `<toke>` will come from the logs and follow format `/?token=a278745b42b35d1aa0dcb002d33cf8738df3b70b2d773e67` . Example from logs:
   ```[I 16:53:03.823 LabApp] The Jupyter Notebook is running at:
 [I 16:53:03.823 LabApp] http://7b637de1e4e9:8888/?token=a278745b42b35d1aa0dcb002d33cf8738df3b70b2d773e67
 [I 16:53:03.824 LabApp]  or http://127.0.0.1:8888/?token=a278745b42b35d1aa0dcb002d33cf8738df3b70b2d773e67
