@@ -10,7 +10,9 @@ Jupyter notebook allows you to run python and r code.
 
 To run jupyter notebook.
 
-* Prequsites for Windows machines: Need to have `make` an `docker` installed. It is recommended to use Chocolatey to install. [Chocolatey](https://chocolatey.org/docs/installation) [Chocolatey Make](https://chocolatey.org/packages/make)
+* Prequsites for Windows machines: Need to have `make` an `docker` installed. It is recommended to use Chocolatey to install. 
+    1. [Chocolatey](https://chocolatey.org/docs/installation) 
+    1. [Chocolatey Make](https://chocolatey.org/packages/make)
 * Prequsites for Mac machines: Need to have `docker` installed.
 
 1. Open cmdpromt or terminal depending on your OS
