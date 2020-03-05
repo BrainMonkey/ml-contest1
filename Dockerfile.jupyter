@@ -1,4 +1,4 @@
-FROM jupyter/datascience-notebook:latest
+FROM jupyter/datascience-notebook:5438a605eba8
 
 COPY ./requirements.txt /tmp/
 
