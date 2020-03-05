@@ -6,13 +6,20 @@ This is the repo for work related to Contest 1. The `contest1.pdf`  are the requ
 
 [Kaggle Contest Site](https://www.kaggle.com/c/unodatamining-2020-1)
 ## Notes
+
+
+### Github
+
+1. Make sure you have downloaded 
+
+1.
 Jupyter notebook allows you to run python and r code.
 
 To run jupyter notebook.
 
 * Prequsites for Windows machines: Need to have `make` an `docker` installed. It is recommended to use Chocolatey to install. 
     1. [Chocolatey](https://chocolatey.org/docs/installation) 
-    1. [Chocolatey Make](https://chocolatey.org/packages/make)
+    2. [Chocolatey Make](https://chocolatey.org/packages/make)
 * Prequsites for Mac machines: Need to have `docker` installed.
 
 1. Open cmdpromt or terminal depending on your OS
