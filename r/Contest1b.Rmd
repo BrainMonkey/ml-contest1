@@ -1,0 +1,256 @@
+---
+title: "Contest2"
+author: "Kevin Rodenhausen"
+date: "3/26/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#Some old code
+#For numerical values we want to replace with average or median (I'll try both) for categorical replace with 0.
+#trainDatClean[,-c(1,14,15,16,24)] = lapply(trainDatClean[,-c(1,14,15,16,24)], function(x) replace(x, is.na(x), round(mean(x, na.rm = TRUE))))
+#trainDatClean[,c(14,15,24)] = lapply(trainDatClean[,c(14,15,24)], function(x) replace(x, is.na(x), Mode(na.omit(x))))
+#trainDatClean$customerID[is.na(trainDatClean$customerID)] = 0
+
+#testDatClean[,-c(1,14,15,16)] = lapply(testDatClean[,-c(1,14,15,16)], function(x) replace(x, is.na(x), round(mean(x, na.rm = TRUE))))
+#testDatClean[,c(14,15)] = lapply(testDatClean[,c(14,15)], function(x) replace(x, is.na(x), Mode(na.omit(x))))
+#testDatClean$customerID[is.na(testDatClean$customerID)] = 0
+
+#trainDatClean = trainDatClean %>% group_by(sessionID) %>% mutate(totalDuration = sum(duration))
+#trainDatClean = trainDatClean %>% group_by(sessionID) %>% mutate(notBoughtTotal = clickTotal - cartTotal)
+#trainDatClean = trainDatClean %>% group_by(sessionID) %>% mutate(totalSessions = n())
+
+#testDatClean = testDatClean %>% group_by(sessionID) %>% mutate(totalDuration = sum(duration))
+#testDatClean = testDatClean %>% group_by(sessionID) %>% mutate(notBoughtTotal = clickTotal - cartTotal)
+#testDatClean = testDatClean %>% group_by(sessionID) %>% mutate(totalSessions = n())
+
+#colSums(is.na(trainDatClean))
+#head(trainDatClean,100)
+#head(trainDat,100)
+```
+
+```{r}
+library(dplyr)
+library(data.table)
+
+#Reading in the data and basic summary information.
+trainDat = read.csv('C:/Users/Kevin/Documents/Machine Learning/unodatamining-2020-1/train.csv')
+testDat = read.csv('C:/Users/Kevin/Documents/Machine Learning/unodatamining-2020-1/test.csv')
+head(trainDat,50)
+head(testDat,50)
+str(trainDat)
+summary(trainDat)
+nrow(trainDat)
+colSums(is.na(trainDat))
+colMeans(trainDat[,-c(1,14,15,24)],na.rm = T)
+```
+
+```{r}
+library(randomForest)
+library(dplyr)
+
+#Splitting the data between customers and non-customers (People with a customerID and those without it.)
+trainDatCustomer = trainDat %>% filter(!is.na(customerID))
+
+trainDatNonCustomer = trainDat %>% filter(is.na(customerID)) %>% select(-customerID, -purchase, -score, -account, -age, -salutation, -lastOrder,-payments)
+
+testDatCustomer = testDat %>% filter(!is.na(customerID))
+
+#I think previous customers no longer have an id but still have data associated with previous purchases.
+testDatNonCustomer = testDat %>% filter(is.na(customerID) & is.na(purchase) & is.na(score) & is.na(account) & is.na(age) & is.na(salutation) & is.na(lastOrder)) %>% select(-customerID, -purchase, -score, -account, -age, -salutation, -lastOrder, -payments)
+
+
+head(trainDatCustomer,50)
+head(trainDatNonCustomer,50)
+head(testDatCustomer,50)
+head(testDatNonCustomer,50)
+
+str(trainDatCustomer)
+str(trainDatNonCustomer)
+str(testDatCustomer)
+str(testDatNonCustomer)
+
+colSums(is.na(trainDatNonCustomer))
+colSums(is.na(testDatNonCustomer))
+
+Mode <- function(x) {
+    ux <- unique(x)
+    ux[which.max(tabulate(match(x, ux)))]
+}
+
+#Imputing missing ddata
+trainDatCustomer[,-c(1,14,15,16,24)] = 
+  lapply(trainDatCustomer[,-c(1,14,15,16,24)], function(x) replace(x, is.na(x), round(mean(x,na.rm = TRUE))))
+
+trainDatCustomer[,c(14,15)] = lapply(trainDatCustomer[,c(14,15)], function(x) replace(x, is.na(x), Mode(na.omit(x))))
+
+trainDatNonCustomer[,-c(1,14,15,16)] = 
+  lapply(trainDatNonCustomer[,-c(1,14,15,16)], function(x) replace(x, is.na(x), round(mean(x,na.rm = TRUE))))
+
+trainDatNonCustomer[,c(14,15)] = lapply(trainDatNonCustomer[,c(14,15)], function(x) replace(x,is.na(x), Mode(na.omit(x))))
+
+testDatCustomer[,-c(1,14,15,16,24)] = 
+  lapply(testDatCustomer[,-c(1,14,15,16,24)], function(x) replace(x, is.na(x), round(mean(x,na.rm = TRUE))))
+
+testDatCustomer[,c(14,15)] = lapply(testDatCustomer[,c(14,15)], function(x) replace(x, is.na(x), Mode(na.omit(x))))
+
+testDatNonCustomer[,-c(1,14,15,16)] = 
+  lapply(testDatNonCustomer[,-c(1,14,15,16)], function(x) replace(x, is.na(x), round(mean(x,na.rm = TRUE))))
+
+testDatNonCustomer[,c(14,15)] = lapply(testDatNonCustomer[,c(14,15)], function(x) replace(x,is.na(x), Mode(na.omit(x))))
+
+#Adding additional variables
+trainDatCustomer = trainDatCustomer %>% group_by(sessionID) %>% mutate(totalDuration = sum(duration))
+trainDatCustomer = trainDatCustomer %>% group_by(sessionID) %>% mutate(notBoughtTotal = clickTotal - cartTotal)
+trainDatCustomer = trainDatCustomer %>% group_by(sessionID) %>% mutate(totalSessions = n())
+trainDatCustomer = trainDatCustomer %>% group_by(sessionID) %>% mutate(priceRange = cartMax - cartMin)
+trainDatCustomer = trainDatCustomer %>% group_by(sessionID) %>% mutate(costRatio = ifelse(cartCount == 0,0,cartTotal / cartCount))
+
+trainDatNonCustomer = trainDatNonCustomer %>% group_by(sessionID) %>% mutate(totalDuration = sum(duration))
+trainDatNonCustomer = trainDatNonCustomer %>% group_by(sessionID) %>% mutate(notBoughtTotal = clickTotal - cartTotal)
+trainDatNonCustomer = trainDatNonCustomer %>% group_by(sessionID) %>% mutate(totalSessions = n())
+trainDatNonCustomer = trainDatNonCustomer %>% group_by(sessionID) %>% mutate(priceRange = cartMax - cartMin)
+trainDatNonCustomer = trainDatNonCustomer %>% group_by(sessionID) %>% mutate(costRatio = ifelse(cartCount == 0,0,cartTotal / cartCount))
+
+testDatCustomer = testDatCustomer %>% group_by(sessionID) %>% mutate(totalDuration = sum(duration))
+testDatCustomer = testDatCustomer %>% group_by(sessionID) %>% mutate(notBoughtTotal = clickTotal - cartTotal)
+testDatCustomer = testDatCustomer %>% group_by(sessionID) %>% mutate(totalSessions = n())
+testDatCustomer = testDatCustomer %>% group_by(sessionID) %>% mutate(priceRange = cartMax - cartMin)
+testDatCustomer = testDatCustomer %>% group_by(sessionID) %>% mutate(costRatio = ifelse(cartCount == 0,0,cartTotal / cartCount))
+
+testDatNonCustomer = testDatNonCustomer %>% group_by(sessionID) %>% mutate(totalDuration = sum(duration))
+testDatNonCustomer = testDatNonCustomer %>% group_by(sessionID) %>% mutate(notBoughtTotal = clickTotal - cartTotal)
+testDatNonCustomer = testDatNonCustomer %>% group_by(sessionID) %>% mutate(totalSessions = n())
+testDatNonCustomer = testDatNonCustomer %>% group_by(sessionID) %>% mutate(priceRange = cartMax - cartMin)
+testDatNonCustomer = testDatNonCustomer %>% group_by(sessionID) %>% mutate(costRatio = ifelse(cartCount == 0,0,cartTotal / cartCount))
+
+trainDatCustomer = subset(trainDatCustomer,select = -c(hour,weekday))
+trainDatNonCustomer = subset(trainDatNonCustomer,select = -c(hour,weekday))
+testDatCustomer = subset(testDatCustomer,select = -c(hour,weekday))
+testDatNonCustomer = subset(testDatNonCustomer,select = -c(hour,weekday))
+
+head(trainDatCustomer,50)
+head(trainDatNonCustomer,50)
+head(testDatCustomer,50)
+head(testDatNonCustomer,50)
+
+colSums(is.na(trainDatCustomer))
+colSums(is.na(trainDatNonCustomer))
+colSums(is.na(testDatCustomer))
+colSums(is.na(testDatNonCustomer))
+```
+
+```{r}
+library(randomForest)
+library(tree)
+
+#Time to make a model 
+set.seed(1)
+#myForest = randomForest(order~., data = trainDatClean, ntree = 500)
+#print(myForest)
+#mtryOpts = tuneRF(trainDatClean[-24],trainDatClean$order, ntreeTry=500,stepFactor=1.5,improve=0.01, trace=TRUE, plot=TRUE)
+#print(mtryOpts)
+```
+
+
+```{r}
+
+customerForest = randomForest(order~., data = subset(trainDatCustomer,select = -c(sessionID)), ntree = 500,importance = T)
+print(customerForest)
+importance(customerForest)
+varImpPlot(customerForest)
+
+nonCustomerForest = randomForest(order~., data = subset(trainDatNonCustomer,select = -c(sessionID)), ntree = 500,importance = T)
+print(nonCustomerForest)
+importance(nonCustomerForest)
+varImpPlot(nonCustomerForest)
+```
+
+
+```{r}
+
+#Now to make a prediction with my model
+predCustVals = predict(customerForest,newdata = testDatCustomer)
+finalCustomerTable = data.frame(sessionID = testDatCustomer$sessionID, order = predCustVals)
+head(finalCustomerTable,50)
+colSums(is.na(finalCustomerTable))
+nrow(finalCustomerTable)
+
+predNonCustVals = predict(nonCustomerForest,newdata = testDatNonCustomer)
+finalNonCustomerTable = data.frame(sessionID = testDatNonCustomer$sessionID, order = predNonCustVals)
+head(finalNonCustomerTable,50)
+colSums(is.na(finalNonCustomerTable))
+nrow(finalNonCustomerTable)
+
+finalTable = rbind(finalCustomerTable,finalNonCustomerTable)
+head(finalTable,50)
+nrow(finalTable)
+```
+
+```{r}
+theFinalTable = finalTable
+theFinalTable$order = factor(theFinalTable$order, levels = c("y","n"))
+theFinalTable$order = as.numeric(theFinalTable$order)
+theFinalTable$order = ifelse(theFinalTable$order == 1,1,0)
+theFinalTable = theFinalTable %>% group_by(sessionID) %>% summarize(ordTot = sum(order))
+theFinalTable$ordTot = ifelse(theFinalTable$ordTot > 0, "y","n")
+names(theFinalTable) = c("sessionID","order")
+write.csv(theFinalTable, file = "ContestSubmission.csv",row.names = F)
+nrow(theFinalTable)
+head(theFinalTable,50)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
